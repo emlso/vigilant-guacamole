@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Namibia Tourism Source Markets Analysis</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.8.0/Recharts.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script>
+        const { useState } = React;
+        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } = Recharts;
+
+        const SourceMarketsAnalysis = () => {
+            const [activeView, setActiveView] = useState('bar');
+
+            // 2023 confirmed data
+            const sourceMarkets2023 = [
+                { country: 'South Africa', visitors: 349729, percentage: 40.5, flag: '🇿🇦', region: 'Africa' },
+                { country: 'Angola', visitors: 112336, percentage: 13.0, flag: '🇦🇴', region: 'Africa' },
+                { country: 'Germany', visitors: 79989, percentage: 9.3, flag: '🇩🇪', region: 'Europe' },
+                { country: 'Zambia', visitors: 56243, percentage: 6.5, flag: '🇿🇲', region: 'Africa' },
+                { country: 'Botswana', visitors: 56157, percentage: 6.5, flag: '🇧🇼', region: 'Africa' },
+                { country: 'USA', visitors: 22544, percentage: 2.6, flag: '🇺🇸', region: 'Americas' },
+                { country: 'UK', visitors: 14758, percentage: 1.7, flag: '🇬🇧', region: 'Europe' },
+                { country: 'France', visitors: 14222, percentage: 1.6, flag: '🇫🇷', region: 'Europe' },
+                { country: 'Netherlands', visitors: 12420, percentage: 1.4, flag: '🇳🇱', region: 'Europe' },
+                { country: 'Switzerland', visitors: 8500, percentage: 1.0, flag: '🇨🇭', region: 'Europe' },
+                { country: 'Others', visitors: 136974, percentage: 15.9, flag: '🌍', region: 'Mixed' }
+            ];
+
+            // Projected 2025 data
+            const sourceMarkets2025 = sourceMarkets2023.map(market => {
+                let growthFactor = 1.073;
+                
+                if (market.country === 'Germany' || market.country === 'Switzerland') {
+                    growthFactor = 0.95;
+                } else if (market.country === 'USA' || market.country === 'France') {
+                    growthFactor = 1.15;
+                } else if (market.region === 'Africa') {
+                    growthFactor = 1.05;
+                }
+                
+                return {
+                    ...market,
+                    visitors: Math.round(market.visitors * growthFactor),
+                    percentage: Math.round((market.visitors * growthFactor / (863872 * 1.073)) * 1000) / 10
+                };
+            });
+
+            // Regional data
+            const regionalData2023 = [
+                { region: 'Africa', visitors: 574465, percentage: 66.5, color: '#8884d8' },
+                { region: 'Europe', visitors: 129889, percentage: 15.0, color: '#82ca9d' },
+                { region: 'Americas', visitors: 22544, percentage: 2.6, color: '#ffc658' },
+                { region: 'Others', visitors: 136974, percentage: 15.9, color: '#ff7c7c' }
+            ];
+
+            const regionalData2025 = [
+                { region: 'Africa', visitors: 603188, percentage: 65.1, color: '#8884d8' },
+                { region: 'Europe', visitors: 140000, percentage: 15.1, color: '#82ca9d' },
+                { region: 'Americas', visitors: 25926, percentage: 2.8, color: '#ffc658' },
+                { region: 'Others', visitors: 157886, percentage: 17.0, color: '#ff7c7c' }
+            ];
+
+            // Trend data
+            const trendData = sourceMarkets2023.slice(0, 6).map((market, index) => ({
+                country: market.country,
+                '2023': market.visitors,
+                '2025 (Projected)': sourceMarkets2025[index].visitors,
+                growth: ((sourceMarkets2025[index].visitors - market.visitors) / market.visitors * 100).toFixed(1)
+            }));
+
+            return React.createElement('div', {
+                className: 'p-6 bg-gray-50 min-h-screen'
+            }, 
+                React.createElement('div', {
+                    className: 'max-w-7xl mx-auto'
+                },
+                    React.createElement('h1', {
+                        className: 'text-3xl font-bold text-gray-800 mb-2'
+                    }, 'Namibia Tourism Source Markets Analysis'),
+                    
+                    React.createElement('p', {
+                        className: 'text-gray-600 mb-8'
+                    }, 'Latest data from 2023 with 2025 projections • Based on 863,872 total arrivals in 2023'),
+                    
+                    // View Toggle
+                    React.createElement('div', {
+                        className: 'flex gap-4 mb-6'
+                    },
+                        React.createElement('button', {
+                            onClick: () => setActiveView('bar'),
+                            className: ⁠ px-4 py-2 rounded-lg ${activeView === 'bar' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'} ⁠
+                        }, 'Country Rankings'),
+                        React.createElement('button', {
+                            onClick: () => setActiveView('pie'),
+                            className: ⁠ px-4 py-2 rounded-lg ${activeView === 'pie' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'} ⁠
+                        }, 'Regional Distribution'),
+                        React.createElement('button', {
+                            onClick: () => setActiveView('trends'),
+                            className: ⁠ px-4 py-2 rounded-lg ${activeView === 'trends' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'} ⁠
+                        }, '2023 vs 2025 Trends')
+                    ),
+
+                    // Country Rankings View
+                    activeView === 'bar' && React.createElement('div', {
+                        className: 'bg-white rounded-lg shadow-lg p-6 mb-8'
+                    },
+                        React.createElement('h2', {
+                            className: 'text-xl font-semibold mb-4'
+                        }, 'Top Source Markets by Visitor Numbers (2023)'),
+                        React.createElement('div', {
+                            className: 'h-96'
+                        },
+                            React.createElement(ResponsiveContainer, {
+                                width: '100%',
+                                height: '100%'
+                            },
+                                React.createElement(BarChart, {
+                                    data: sourceMarkets2023.slice(0, 10),
+                                    margin: { left: 20, right: 30, top: 20, bottom: 60 }
+                                },
+                                    React.createElement(CartesianGrid, { strokeDasharray: '3 3' }),
+                                    React.createElement(XAxis, {
+                                        dataKey: 'country',
+                                        angle: -45,
+                                        textAnchor: 'end',
+                                        height: 80,
+                                        fontSize: 12
+                                    }),
+                                    React.createElement(YAxis),
+                                    React.createElement(Tooltip, {
+                                        formatter: (value, name) => [
+                                            ⁠ ${value.toLocaleString()} visitors ⁠,
+                                            'Arrivals'
+                                        ],
+                                        labelFormatter: (label) => {
+                                            const country = sourceMarkets2023.find(c => c.country === label);
+                                            return ⁠ ${country?.flag} ${label} (${country?.percentage}%) ⁠;
+                                        }
+                                    }),
+                                    React.createElement(Bar, { dataKey: 'visitors', fill: '#8884d8' })
+                                )
+                            )
+                        ),
+                        
+                        // Market Insights
+                        React.createElement('div', {
+                            className: 'mt-6 grid grid-cols-1 md:grid-cols-3 gap-4'
+                        },
+                            React.createElement('div', {
+                                className: 'bg-blue-50 p-4 rounded-lg'
+                            },
+                                React.createElement('h3', {
+                                    className: 'font-semibold text-blue-800 mb-2'
+                                }, '🇿🇦 South Africa Dominance'),
+                                React.createElement('p', {
+                                    className: 'text-sm text-blue-700'
+                                }, '349,729 visitors (40.5%) - Regional leader maintaining strong ties')
+                            ),
+                            React.createElement('div', {
+                                className: 'bg-green-50 p-4 rounded-lg'
+                            },
+                                React.createElement('h3', {
+                                    className: 'font-semibold text-green-800 mb-2'
+                                }, '🇩🇪 Germany Strong'),
+                                React.createElement('p', {
+                                    className: 'text-sm text-green-700'
+                                }, '79,989 visitors (9.3%) - Top European market, but facing headwinds')
+                            ),
+                            React.createElement('div', {
+                                className: 'bg-orange-50 p-4 rounded-lg'
+                            },
+                                React.createElement('h3', {
+                                    className: 'font-semibold text-orange-800 mb-2'
+                                }, '🇦🇴 Angola Recovery'),
+                                React.createElement('p', {
+                                    className: 'text-sm text-orange-700'
+                                }, '112,336 visitors (13.0%) - Significant improvement from pandemic lows')
+                            )
+                        )
+                    ),
+
+                    // Regional Distribution View
+                    activeView === 'pie' && React.createElement('div', {
+                        className: 'grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8'
+                    },
+                        React.createElement('div', {
+                            className: 'bg-white rounded-lg shadow-lg p-6'
+                        },
+                            React.createElement('h2', {
+                                className: 'text-xl font-semibold mb-4'
+                            }, 'Regional Distribution 2023'),
+                            React.createElement('div', {
+                                className: 'h-80'
+                            },
+                                React.createElement(ResponsiveContainer, {
+                                    width: '100%',
+                                    height: '100%'
+                                },
+                                    React.createElement(PieChart, {},
+                                        React.createElement(Pie, {
+                                            data: regionalData2023,
+                                            cx: '50%',
+                                            cy: '50%',
+                                            labelLine: false,
+                                            label: ({region, percentage}) => ⁠ ${region}\n${percentage}% ⁠,
+                                            outerRadius: 80,
+                                            fill: '#8884d8',
+                                            dataKey: 'visitors'
+                                        },
+                                            regionalData2023.map((entry, index) => 
+                                                React.createElement(Cell, { 
+                                                    key: ⁠ cell-${index} ⁠, 
+                                                    fill: entry.color 
+                                                })
+                                            )
+                                        ),
+                                        React.createElement(Tooltip, {
+                                            formatter: (value) => [⁠ ${value.toLocaleString()} visitors ⁠, 'Arrivals']
+                                        })
+                                    )
+                                )
+                            )
+                        ),
+                        React.createElement('div', {
+                            className: 'bg-white rounded-lg shadow-lg p-6'
+                        },
+                            React.createElement('h2', {
+                                className: 'text-xl font-semibold mb-4'
+                            }, 'Projected 2025 Distribution'),
+                            React.createElement('div', {
+                                className: 'h-80'
+                            },
+                                React.createElement(ResponsiveContainer, {
+                                    width: '100%',
+                                    height: '100%'
+                                },
+                                    React.createElement(PieChart, {},
+                                        React.createElement(Pie, {
+                                            data: regionalData2025,
+                                            cx: '50%',
+                                            cy: '50%',
+                                            labelLine: false,
+                                            label: ({region, percentage}) => ⁠ ${region}\n${percentage}% ⁠,
+                                            outerRadius: 80,
+                                            fill: '#8884d8',
+                                            dataKey: 'visitors'
+                                        },
+                                            regionalData2025.map((entry, index) => 
+                                                React.createElement(Cell, { 
+                                                    key: ⁠ cell-${index} ⁠, 
+                                                    fill: entry.color 
+                                                })
+                                            )
+                                        ),
+                                        React.createElement(Tooltip, {
+                                            formatter: (value) => [⁠ ${value.toLocaleString()} visitors ⁠, 'Arrivals']
+                                        })
+                                    )
+                                )
+                            )
+                        )
+                    ),
+
+                    // Trends View
+                    activeView === 'trends' && React.createElement('div', {
+                        className: 'bg-white rounded-lg shadow-lg p-6 mb-8'
+                    },
+                        React.createElement('h2', {
+                            className: 'text-xl font-semibold mb-4'
+                        }, 'Market Trends: 2023 vs 2025 Projections'),
+                        React.createElement('div', {
+                            className: 'h-96'
+                        },
+                            React.createElement(ResponsiveContainer, {
+                                width: '100%',
+                                height: '100%'
+                            },
+                                React.createElement(BarChart, {
+                                    data: trendData,
+                                    margin: { left: 20, right: 30, top: 20, bottom: 60 }
+                                },
+                                    React.createElement(CartesianGrid, { strokeDasharray: '3 3' }),
+                                    React.createElement(XAxis, {
+                                        dataKey: 'country',
+                                        angle: -45,
+                                        textAnchor: 'end',
+                                        height: 80,
+                                        fontSize: 12
+                                    }),
+                                    React.createElement(YAxis),
+                                    React.createElement(Tooltip),
+                                    React.createElement(Legend),
+                                    React.createElement(Bar, { dataKey: '2023', fill: '#8884d8', name: '2023 Actual' }),
+                                    React.createElement(Bar, { dataKey: '2025 (Projected)', fill: '#82ca9d', name: '2025 Projected' })
+                                )
+                            )
+                        ),
+                        React.createElement('div', {
+                            className: 'mt-6'
+                        },
+                            React.createElement('h3', {
+                                className: 'font-semibold mb-4'
+                            }, 'Growth Projections by Market'),
+                            React.createElement('div', {
+                                className: 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4'
+                            },
+                                trendData.map((market, index) => 
+                                    React.createElement('div', {
+                                        key: index,
+                                        className: ⁠ p-3 rounded-lg text-center ${parseFloat(market.growth) > 0 ? 'bg-green-50' : 'bg-red-50'} ⁠
+                                    },
+                                        React.createElement('div', {
+                                            className: 'font-semibold text-sm'
+                                        }, market.country),
+                                        React.createElement('div', {
+                                            className: ⁠ text-lg font-bold ${parseFloat(market.growth) > 0 ? 'text-green-600' : 'text-red-600'} ⁠
+                                        }, ⁠ ${market.growth > 0 ? '+' : ''}${market.growth}% ⁠)
+                                    )
+                                )
+                            )
+                        )
+                    ),
+
+                    // Key Market Intelligence
+                    React.createElement('div', {
+                        className: 'bg-white rounded-lg shadow-lg p-6'
+                    },
+                        React.createElement('h2', {
+                            className: 'text-xl font-semibold mb-4'
+                        }, '2025 Market Intelligence & Trends'),
+                        React.createElement('div', {
+                            className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                        },
+                            React.createElement('div', {
+                                className: 'bg-red-50 p-4 rounded-lg'
+                            },
+                                React.createElement('h3', {
+                                    className: 'font-semibold text-red-800 mb-2'
+                                }, '⚠ German Market Challenges'),
+                                React.createElement('p', {
+                                    className: 'text-sm text-red-700'
+                                }, 'Rising travel costs and geopolitical tensions causing decline in German-speaking countries')
+                            ),
+                            React.createElement('div', {
+                                className: 'bg-green-50 p-4 rounded-lg'
+                            },
+                                React.createElement('h3', {
+                                    className: 'font-semibold text-green-800 mb-2'
+                                }, '📈 Growth Markets'),
+                                React.createElement('p', {
+                                    className: 'text-sm text-green-700'
+                                }, 'USA and France showing positive growth trends, offsetting European declines')
+                            ),
+                            React.createElement('div', {
+                                className: 'bg-blue-50 p-4 rounded-lg'
+                            },
+                                React.createElement('h3', {
+                                    className: 'font-semibold text-blue-800 mb-2'
+                                }, '🎯 2025 Projections'),
+                                React.createElement('p', {
+                                    className: 'text-sm text-blue-700'
+                                }, '7.3% overall growth expected, reaching ~927,000 total arrivals with N$4.6B revenue')
+                            ),
+                            React.createElement('div', {
+                                className: 'bg-purple-50 p-4 rounded-lg'
+                            },
+                                React.createElement('h3', {
+                                    className: 'font-semibold text-purple-800 mb-2'
+                                }, '🌍 Regional Stability'),
+                                React.createElement('p', {
+                                    className: 'text-sm text-purple-700'
+                                }, 'African markets (66.5%) remain core foundation with South Africa leading at 40.5%')
+                            ),
+                            React.createElement('div', {
+                                className: 'bg-yellow-50 p-4 rounded-lg'
+                            },
+                                React.createElement('h3', {
+                                    className: 'font-semibold text-yellow-800 mb-2'
+                                }, '🔄 Market Diversification'),
+                                React.createElement('p', {
+                                    className: 'text-sm text-yellow-700'
+                                }, 'Continued efforts needed to reduce over-dependence on South African market')
+                            ),
+                            React.createElement('div', {
+                                className: 'bg-orange-50 p-4 rounded-lg'
+                            },
+                                React.createElement('h3', {
+                                    className: 'font-semibold text-orange-800 mb-2'
+                                }, '💡 Strategic Focus'),
+                                React.createElement('p', {
+                                    className: 'text-sm text-orange-700'
+                                }, 'Premium positioning and sustainable tourism maintaining competitive advantage')
+                            )
+                        )
+                    ),
+
+                    // Data Source
+                    React.createElement('div', {
+                        className: 'mt-6 text-sm text-gray-500 text-center'
+                    },
+                        React.createElement('p', {}, 'Data Sources: Ministry of Environment, Forestry & Tourism (2023), Tourism industry projections (2025)'),
+                        React.createElement('p', {}, 'Last updated: June 2025 • Total 2023 arrivals: 863,872 visitors')
+                    )
+                )
+            );
+        };
+
+        // Render the app
+        ReactDOM.render(React.createElement(SourceMarketsAnalysis), document.getElementById('root'));
+    </script>
+</body>
+</html>
